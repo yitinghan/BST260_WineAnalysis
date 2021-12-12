@@ -1,0 +1,137 @@
+---
+title: "Quality Classification"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nnet)
+library(tidyverse)
+library(splitstackshape)
+library(broom)
+library(VGAM)
+library(MASS)
+library(caret)
+library(e1071)
+library(pROC)
+library(rpart)
+library(randomForest)
+library(knitr)
+library(ggplot2)
+library(MASS)
+```
+
+We want to predict the wine quality based on all the covariates we have. In order to assess the accuracy of our models, we first construct a baseline model to compare our results against, which predicts any wine's quality as the mode quality of all the wine. Then we run the random forest model and visualize the importance of all the features based on the Gini index as the graph shown below.
+```{r,echo=FALSE}
+dat_w <- read.csv("winequality-white.csv",sep = ";")
+dat_r <- read.csv("winequality-red.csv",sep = ";")
+```
+```{r,echo=FALSE}
+dat_w$red <- 0
+dat_r$red <- 1
+dat <- rbind(dat_w, dat_r)
+dat$red <- factor(dat$red)
+#dat$quality_c <- 0
+#dat[which(dat$quality == 6),]$quality_c <- 1
+#dat[which(dat$quality > 6),]$quality_c <- 2
+#dat$quality_c <- factor(dat$quality_c)
+dat$quality <- factor(dat$quality, levels = c(3,4,5,6,7,8,9))
+```
+
+```{r,echo=FALSE}
+set.seed(1)
+x <- stratified(dat, "quality", 0.7, keep.rownames = TRUE)
+train_set <- x %>% dplyr::select(-rn)
+train_index <- as.numeric(x$rn)
+test_set <- dat[-train_index,]
+
+```
+
+```{r,echo=FALSE}
+set.seed(1)
+rf <- randomForest(quality ~ .-quality,data= train_set) 
+predict_rf <- predict(rf, newdata=test_set,type="response")
+matrix_rf <- confusionMatrix(data = as.factor(predict_rf), reference = test_set$quality)
+```
+```{r,echo=FALSE}
+variable_importance<-importance(rf)
+tmp <- tibble(Feature = rownames(variable_importance),
+                  Gini = variable_importance[,1]) %>%
+                  arrange(desc(Gini))
+ggplot(data = tmp,aes(Feature,Gini)) + 
+  geom_bar(stat = "identity",fill = "steelblue") + 
+  coord_flip() + ggtitle("Feature Importance") + 
+  geom_text(label=round(tmp$Gini,2), color = "blue", hjust = -0.2, size = 3,
+    position = position_dodge(width = 1),
+    inherit.aes = TRUE) + 
+  scale_y_continuous(limits = c(0,400))
+```
+
+Next we want to use more models such as multinomial regression, bayesian inference and KNN. As alcohol,density and volatile.acidity are the most important features among all, we build those next models only with those three covariates to improve overall accuracies. In the graph shown below, we represents the overall accuracies of all the models we utilize, with the random forest model having the highest accuracy.
+```{r,echo=FALSE,results=FALSE,message=FALSE,warning=FALSE}
+multi <- multinom(quality ~ alcohol + volatile.acidity + density, 
+ data = train_set,trace=FALSE)
+multi_predict <- predict(multi, test_set, type = "class")
+multi_matrix <- confusionMatrix(data = factor(multi_predict,levels = c(3,4,5,6,7,8,9)), reference = test_set$quality)
+```
+
+```{r,echo=FALSE}
+set.seed(1)
+tree <- rpart(quality ~ alcohol + volatile.acidity + density, 
+           data = train_set)
+tree_predict <- predict(tree, newdata = test_set,type="class")
+tree_matrix <- confusionMatrix(data = factor(tree_predict, levels = c(3,4,5,6,7,8,9)), reference = as.factor(test_set$quality))
+```
+
+```{r,echo=FALSE}
+nb <- naiveBayes(quality ~ alcohol + volatile.acidity + density, data = train_set)
+nb_predict <- predict(nb, test_set)
+nb_matrix <- confusionMatrix(data = as.factor(nb_predict), reference = test_set$quality)
+```
+```{r,echo=FALSE}
+ld <- lda(quality ~ alcohol + volatile.acidity + density, data = train_set)
+ld_predict <- predict(ld,test_set,type="response")$class
+ld_matrix <- confusionMatrix(data = factor(ld_predict, levels = c(3,4,5,6,7,8,9)), reference = test_set$quality)
+```
+```{r,echo=FALSE}
+qd <- qda(quality ~ alcohol + volatile.acidity + density, data = train_set)
+qd_predict <- predict(qd,test_set,type="response")$class
+qd_matrix <- confusionMatrix(data = factor(qd_predict,levels=c(3,4,5,6,7,8,9)), reference = test_set$quality)
+```
+```{r,echo=FALSE}
+uniqv <- unique(train_set$quality)
+base <- uniqv[which.max(tabulate(match(train_set$quality, uniqv)))]
+base_accuracy <- sum(test_set$quality==base) / nrow(test_set)
+```
+```{r,echo=FALSE}
+set.seed(1)
+knn <- knn3(quality ~ alcohol + volatile.acidity + density, data = train_set, k = 11)
+predict_knn <- predict(knn,test_set, type="class")
+knn_matrix <- confusionMatrix(data = factor(predict_knn,levels=c(3,4,5,6,7,8,9)), reference = test_set$quality)
+```
+
+```{r,echo=FALSE}
+accuracies <- numeric(8)
+accuracies[1] <- matrix_rf$overall["Accuracy"]
+accuracies[2] <- knn_matrix$overall["Accuracy"]
+accuracies[3] <- nb_matrix$overall["Accuracy"]
+accuracies[4] <- ld_matrix$overall["Accuracy"]
+accuracies[5] <- qd_matrix$overall["Accuracy"]
+accuracies[6] <- multi_matrix$overall["Accuracy"]
+accuracies[7] <- tree_matrix$overall["Accuracy"]
+accuracies[8] <- base_accuracy
+result <- data.frame(Method = c("Random Forest", "KNN", "Naive Bayes", 
+                                 "LDA", "QDA", "Multinomial", 
+                                " Decision Tree","Baseline"),
+                     Accuracy = accuracies)
+result <- result[order(result$Accuracy),]
+result$Accuracy <- round(result$Accuracy,digits=2)
+ggplot(result) + geom_bar(aes(Method,Accuracy),stat = "identity",
+                          fill="steelblue") + coord_flip() + ggtitle("Model Accuracy") + 
+  scale_y_continuous(limits = c(0,1)) + geom_text(aes(Method,Accuracy),label=result$Accuracy,
+                                                       hjust = -0.2, size = 3, color = "blue",
+    position = position_dodge(width = 1),
+    inherit.aes = TRUE)
+```
+
+

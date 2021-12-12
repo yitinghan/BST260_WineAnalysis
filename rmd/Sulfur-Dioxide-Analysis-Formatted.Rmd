@@ -1,0 +1,55 @@
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+## 1. Total Sulfur Dioxide
+
+```{r, echo = FALSE, message = FALSE}
+ # summary(fulldf$total.sulfur.dioxide)
+fulldf %>% ggplot(aes(total.sulfur.dioxide)) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+The above histogram shows the total.sulfur.dioxide has a bimodal distribution. 
+
+## 2. Free Sulfur ioxide
+
+```{r, echo = FALSE, message = FALSE}
+#summary(fulldf$free.sulfur.dioxide)
+fulldf  %>% ggplot(aes(free.sulfur.dioxide))+ 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+The free.sulfur.dioxide has a right skewed distribution. 
+
+```{r, echo = FALSE, message = FALSE}
+ggplot(data = fulldf, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) +
+  geom_point() + geom_smooth()
+```
+
+By plotting free.sulfur.dioxide and total.sulfur.dioxide, we see a strong positive correlation among these two variables.
+
+```{r, echo = FALSE, message = FALSE}
+f <- ggplot(data = fulldf, aes(x = quality_group, y = free.sulfur.dioxide, color = quality_group)) +
+  geom_boxplot()
+t <- ggplot(data = fulldf, aes(x = quality_group, y = total.sulfur.dioxide, color = quality_group)) +
+  geom_boxplot()
+grid.arrange(f,t, ncol=2)
+```
+
+We discover the mid quality wine group has overall high sulfur dioxide level.

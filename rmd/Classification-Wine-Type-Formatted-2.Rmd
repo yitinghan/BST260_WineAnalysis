@@ -1,0 +1,152 @@
+---
+output: html_document
+---
+
+
+```{r, include = FALSE, echo=FALSE, results='hide'}
+library(tidyverse)
+library(splitstackshape)
+library(caret)
+library(MASS)
+library(pROC)
+library(rpart)
+library(randomForest)
+library(knitr)
+library(tree)
+library(DT)
+
+data = read.csv("winequality_all.csv")
+data_red = data %>% filter(red == 1)
+data_white = data %>% filter(red == 0)
+```
+
+
+## Train-Test Split
+
+In this section, the wine data set is splitted into training set and test set for applying machine learning algorithms later on. Here we use a 70% - 30% stratification. The dimension of training set is (4548, 13), and the dimension of test set is (1949, 13).
+
+```{r, echo=FALSE}
+data <- data %>% mutate(fixed.acidity = as.numeric(fixed.acidity),
+                        volatile.acidity = as.numeric(volatile.acidity),
+                        citric.acid = as.numeric(citric.acid),
+                        residual.sugar = as.numeric(residual.sugar),
+                        chlorides = as.numeric(chlorides),
+                        free.sulfur.dioxide= as.numeric(free.sulfur.dioxide),
+                        total.sulfur.dioxide = as.numeric(total.sulfur.dioxide),
+                        density = as.numeric(density),
+                        pH = as.numeric(pH),
+                        sulphates = as.numeric(sulphates),
+                        alcohol = as.numeric(alcohol),
+                        quality = as.factor(quality),
+                        red = as.factor(red)
+)
+
+```
+
+
+```{r pressure, echo=FALSE}
+set.seed(123)
+
+x <- stratified(data, "red", 0.7, keep.rownames = TRUE)
+train_set <- x %>% dplyr::select(-rn)
+train_index <- as.numeric(x$rn)
+test_set <- data[-train_index,]
+
+print(paste0("Dimension of red wine data set: ", dim(train_set)[1],", ", dim(train_set)[2]))
+print(paste0("Dimension of red wine data set: ", dim(test_set)[1], ", ", dim(test_set)[2]))
+```
+
+## Models Using all Predictors
+
+In this section, we build machine learning models: logistic regression, LDA, QDA, tree model and random forest, based on all the potential predictors to predict whether the wine is red or not.
+
+### logistic regression
+
+```{r, echo=FALSE}
+set.seed(1)
+fit_glm <- glm(as.factor(red) ~ . , data = train_set, family = "binomial")
+probs_glm <- predict(fit_glm, newdata = test_set, type = "response")
+preds_glm <- ifelse(probs_glm > 0.5, 1, 0)
+confusionMatrix(as.factor(preds_glm), reference =as.factor(test_set$red))
+```
+
+The logistic regression model has great performance. It has overall accuracy of 0.9959, with sensitivity and specificity 0.9980 and 0.9896, which is pretty high. This model performs very good in predicting white wine as well as in predicting red wine.  
+
+### LDA
+
+```{r, echo=FALSE}
+set.seed(1)
+lda_fit <- lda(as.factor(red) ~ . , data = train_set)
+lda_probs <- predict(lda_fit, newdata = test_set)$posterior[,2]
+lda_preds <- ifelse(lda_probs > 0.5, 1, 0)
+confusionMatrix(as.factor(lda_preds), reference =as.factor(test_set$red), positive = "1")
+```
+
+For LDA model, the overall accuracy is slightly higher than the logistic regression model, with slightly higher specificity and lower sensitivity. 
+
+### QDA
+
+For QDA model, since in this section the number of predictors is quite high, there is a problem of rank deficiency of red wine group of our training set, which means the parameters required by QDA model cannot be estimated from the data we currently have. Therefore, the QDA model is ignored in this section, but will be applied in following section.
+
+### Tree Model
+
+```{r, echo=FALSE}
+# Tree
+fit_tree =rpart(as.factor(red) ~ . , data=train_set)  
+tree_probs <- predict(fit_tree, newdata = test_set)[,2]
+tree_preds <- ifelse(tree_probs > 0.5, 1, 0)
+confusionMatrix(as.factor(tree_preds), reference = as.factor(test_set$red), positive = "1")
+```
+
+The tree model here has lower accuracy compared to LDA or logistic regression model, with much lower sensitivity, which means it doesn't perform very well in predicting red wine.
+
+```{r, echo=FALSE}
+fit_tree2 = tree(red ~ . , train_set)  
+plot(fit_tree2, type = "uniform")
+text(fit_tree2, cex = 1)
+```
+
+Here is a visualization of tree model. We can see that the tree model only employs variables of __chlorides__, __total sulfur dioxide__, __density__, __fixed acidity__, while variables __volatile acidity__, __citric acid__, __residual sugar__, __free sulfur dioxide__, __pH__, __sulphates__, __alcohol__, __quality__ are not useful in model building. 
+
+### Random Forest
+
+```{r, echo=FALSE}
+# Random Forest
+fit_rf <- randomForest(as.factor(red) ~ . , data=train_set)
+rf_probs <- predict(fit_rf, newdata = test_set, type="prob")[,2]
+rf_preds <- ifelse(rf_probs > 0.5, 1, 0)
+confusionMatrix(as.factor(rf_preds), reference = as.factor(test_set$red), positive = "1")
+```
+
+The random forest model has high overall accuracy, high sensitivity, high specificity as well.
+
+```{r, echo=FALSE, warning=FALSE}
+variable_importance <- importance(fit_rf) 
+tmp <- data_frame(feature = rownames(variable_importance),
+                  Gini = variable_importance[,1]) %>%
+                  arrange(desc(Gini))
+kable(tmp)
+```
+
+This table shows that __chlorides__ and __total sulfur dioxide__ are the two most important predictors in classifying red wine and white wine.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+roc_glm <- roc(as.factor(test_set$red), probs_glm)
+roc_lda <- roc(as.factor(test_set$red), lda_probs)
+roc_tree <- roc(as.factor(test_set$red), tree_probs)
+roc_rf <- roc(as.factor(test_set$red), rf_probs)
+
+ggroc(list("Logistic Regression" = roc_glm, "LDA" = roc_lda, "Decision Tree" = roc_tree, "Random Forest" = roc_rf)) +
+  theme(legend.title = element_blank()) +
+  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color = "black", linetype = "dashed") +
+  xlab("Sensitivity") +
+  ylab("Specificity")
+```
+```{r, warning=FALSE, echo=FALSE}
+print(paste0("For logistic regression model, the AUC is ", auc(roc_glm)))
+print(paste0("For LDA model, the AUC is ", auc(roc_lda)))
+print(paste0("For Decision Tree model, the AUC is ", auc(roc_tree)))
+print(paste0("For Random Forest model, the AUC is ", auc(roc_rf)))
+```
+
+The ROC curves and AUC all indicate that these models perform very good in predicting whether a wine is red or not. The model that has the highest AUC is the random forest model.

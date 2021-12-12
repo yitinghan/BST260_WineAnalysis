@@ -1,0 +1,30 @@
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+```{r, echo = FALSE}
+fulldf$quality.category <- cut(fulldf$quality, breaks = c(0,4,6,10))
+dfcor <- cor(subset(fulldf, select = -c(quality, quality_group,quality.category, red)))
+corrplot(dfcor, method = 'square', order = "hclust", 
+         tl.col = "black", tl.cex = 0.8, tl.offset = 1)
+```
+
+From the correlation graph of independent continuous variables above, we observe that:
+
+1. free.sulfur.dioxide strongly positively correlated with total.sulfur.dioxide 
+2. alcohol is strongly negatively correlated with density.

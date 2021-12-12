@@ -1,0 +1,39 @@
+
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+#  summary(fulldf$sulphates)
+fulldf %>% ggplot(aes(sulphates)) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+From the histogram, we see that the distribution of alcohol is right skewed. After applying log2 transformation, the distribution of alcohol is less skewed. 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+fulldf %>% ggplot(aes(log2(sulphates))) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+```{r, echo = FALSE, message = FALSE}
+ggplot(data = fulldf, aes(x = quality_group, y = sulphates, color = quality_group)) +
+  geom_boxplot()
+```
+
+From the boxplot above, we see the distribution of sulphates for each quality group is quite similar. 

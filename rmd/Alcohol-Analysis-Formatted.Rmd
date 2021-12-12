@@ -1,0 +1,49 @@
+
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+
+```{r, echo = FALSE, message = FALSE}
+#  summary(fulldf$alcohol)
+fulldf %>% ggplot(aes(alcohol)) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+  # fulldf %>% ggplot(aes(alcohol)) + 
+  # geom_histogram( color = "black") + facet_wrap(.~red, labeller = labeller(red = 
+  #   c("0" = "White Wine",
+  #     "1" = "Red Wine")
+  # )) 
+```
+
+From the histogram, we see that the distribution of alcohol is right skewed. After applying log2 transformation, the distribution of alcohol is less skewed. 
+
+```{r, echo = FALSE, message = FALSE, echo = FALSE}
+  fulldf %>% ggplot(aes(log2(alcohol))) + 
+  geom_histogram( color = "blue",fill = "steelblue") 
+# + facet_wrap(.~red, labeller = labeller(red = 
+#     c("0" = "White Wine",
+#       "1" = "Red Wine")
+#   )) 
+```
+
+```{R, echo = FALSE, message = FALSE}
+ggplot(data = fulldf, aes(x = quality_group, y = alcohol, color = quality_group)) +
+  geom_boxplot()
+```
+
+The low and high quality means are significantly far away and their IQR range has little overlap, indicating the variability between low quality group and high quality group is high. 

@@ -1,0 +1,126 @@
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+
+
+```{r}
+
+require(factoextra)
+require(NbClust)
+require(cluster)
+require(dplyr)
+require(knitr)
+require(ggplot2)
+require(ggradar)
+
+
+```
+
+
+
+```{r}
+
+data = read.csv("fullwine.csv")
+data = data[, 1:(ncol(data) - 3)] # Remove last two columns
+data = data[, -1]
+data = scale(data)# scaled the data
+data_df = data.frame(data)
+```
+
+
+# K-means 
+
+First we use the classical K-means method to do clustering analysis, with optimal cluster number chosen as 2. 
+
+```{r}
+
+km_res <- kmeans(data, 2, nstart = 30)
+fviz_cluster(km_res, data) + theme_minimal() + ggtitle("Number Of Clusters: 2")
+
+```
+
+We extract the clusters results and add them back to our initial data to do some descriptive statistics at the cluster level(Here for convenience, we temporarily view `red` as a numeric variable):
+
+```{r}
+library(dplyr)
+library(knitr)
+data_ori <- read.csv("fullwine.csv")
+data_ori <- data_ori[,-1]
+data_ori <- data_ori[, -ncol(data_ori)]
+cluster_data <- data_ori %>% 
+  mutate(Cluster = km_res$cluster) %>%
+  group_by(Cluster) %>% summarise_all("mean") %>%
+  mutate_if(is.numeric, ~round(., 3))
+
+cluster_data %>% kable()
+
+
+```
+
+It can be shown that from our output, there are two clusters. Red wine mainly dominates cluster 1, whereas white wine mainly dominates cluster 2, which is quite reasonable. 
+
+
+# Partition Around Medoids
+
+In order to validate the clustering result, we use a different clustering method. An alternative to K-means clustering is the K-medoids clustering or PAM (Partitioning Around Medoids, Kaufman & Rousseeuw, 1990), which is less sensitive to outliers compared to K-means.
+
+```{r}
+library(cluster)
+pam_res <- pam(data, 2)
+# Visualize
+fviz_cluster(pam_res)
+
+
+```
+
+```{r}
+cluster_pam_data <- data_ori %>% 
+  mutate(Cluster = pam_res$cluster) %>%
+  group_by(Cluster) %>% summarise_all("mean") %>%
+  mutate_if(is.numeric, ~round(., 3))
+
+cluster_pam_data %>% kable()
+
+
+```
+
+We notice that the result output by K-means and PAM does not differ too much due to the innate characteristic of our dataset(red wine and white wine). For simplicity, we will just use the result of K-means for the following analysis.
+
+# Visualization
+
+```{r}
+library(ggradar)
+library(scales)
+library(ggplot2)
+
+radar_plt <- cluster_data %>% 
+  mutate_each(funs(rescale), -Cluster) %>%
+  ggradar(
+    grid.label.size = 5,  # Affects the grid annotations (0%, 50%, etc.)
+    axis.label.size = 2.5, # Afftects the names of the variables
+    group.point.size = 2   # Simply the size of the point 
+  )
+
+
+radar_plt 
+```
+
+From clustering analysis, we can see obvious characteristics of red wine and white wine visualized by the radar chart:
+
+- Cluster 1(mainly red wine) has higher fixed acidity, volatile acidity, chlorides, sulphates, pH and density. 
+
+- Cluster 2(mainly white wine) has higher citric acid, residual sugar, free sulfur dioxide, total sulfur dioxide, alcohol and quality. 
+
+
+
+
+# References:
+
+- Han, Jiawei, Micheline Kamber, and Jian Pei. 2012. Data Mining: Concepts and Techniques. 3rd ed. Boston: Morgan Kaufmann.
+
+- Lawson, Richard G., and Peter C. Jurs. 1990. “New Index for Clustering Tendency and Its Application to Chemical Problems.” Journal of Chemical Information and Computer Sciences 30 (1): 36–41.
+
+- Kaufman, Leonard, and Peter J. Rousseeuw. 1990 "Partitioning around medoids (program pam)." Finding groups in data: an introduction to cluster analysis 344 : 68-125.
+

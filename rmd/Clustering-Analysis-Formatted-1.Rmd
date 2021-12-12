@@ -1,0 +1,81 @@
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+
+
+```{r}
+
+require(factoextra)
+require(NbClust)
+require(cluster)
+require(dplyr)
+require(knitr)
+require(ggplot2)
+require(ggradar)
+
+
+```
+
+# Clustering Tendency
+
+First, we use the Hopkins statistic (Lawson and Jurs 1990) denoted as H to assess the clustering tendency. If there is no clustering tendency, H would be about 0.5. A value for H higher than 0.75 indicates a clustering tendency at the 90% confidence level(Han, Kamber, and Pei 2012).
+
+```{r}
+
+data = read.csv("fullwine.csv")
+data = data[, -1]
+data = data[, 1:(ncol(data) - 3)] # Remove last two columns
+data = scale(data)# scaled the data
+data_df = data.frame(data)
+```
+
+```{r}
+library(factoextra)
+res = get_clust_tendency(data, n = 100, graph = FALSE)
+round(res$hopkins_stat,3)
+```
+
+
+# The Elbow Method
+
+For the elbow method, in which the sum of squares at each number of clusters is calculated and graphed, we can look for a change of slope from steep to shallow to determine the optimal number of clusters. 
+
+```{r}
+library(factoextra)
+fviz_nbclust(data, kmeans, method = "wss") + geom_vline(xintercept = 3, linetype = 2) + labs(subtitle = "Elbow method") 
+
+```
+
+The optimal cluster number given by the elbow method is 3.
+
+
+# The Silhouette Method
+
+The Silhouette method computes the average silhouette of observations for different numbers. The optimal number of clusters is the one that maximizes the average silhouette over a range of possible values. 
+
+```{r}
+
+fviz_nbclust(data, kmeans, method = "silhouette", k.max = 10) + theme_minimal() + ggtitle("Silhouette method")
+
+
+```
+
+The optimal cluster number given by the Silhouette method is 2, which is different from the value that elbow method suggests.
+
+
+## 2.3 NbClust
+
+The NbClust package provides variou indices for determining the relevant number of clusters and proposes to users the best clustering scheme from the different results by using the majority rule.
+
+
+```{r}
+
+library(NbClust)
+res_nbclust = NbClust(data, min.nc = 2, max.nc = 8, method = "complete", index ="all")
+plt = fviz_nbclust(res_nbclust)
+plt
+```
+
+Based on the analysis above, since k = 2 has the most votes, we will choose k = 2 to be the optimal cluster number.

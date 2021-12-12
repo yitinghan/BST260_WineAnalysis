@@ -1,0 +1,40 @@
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+
+```{r, echo = FALSE, message = FALSE}
+ # summary(fulldf$density)
+fulldf %>% ggplot(aes(density)) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+The above histogram shows the density distribution is heavily right skewed. After removing the top three density values (outliers), we discover the density distribution is approximate normal as follow: 
+
+```{r, echo = FALSE, message = FALSE}
+fulldf  %>% filter(density <= 1.005) %>% ggplot(aes(density))+ 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+```{r, echo = FALSE, message = FALSE}
+ggplot(data = fulldf, aes(x = quality_group, y = density, color = quality_group)) +
+  geom_boxplot()
+```
+
+We see the mean density in high quality group is significantly lower than the mean density in the other two groups.
+

@@ -1,0 +1,120 @@
+---
+title: "Classification -- red wine or white wine?"
+output: html_document
+---
+
+
+```{r, include = FALSE, echo=FALSE, results='hide'}
+library(tidyverse)
+library(splitstackshape)
+library(caret)
+library(MASS)
+library(pROC)
+library(rpart)
+library(randomForest)
+library(knitr)
+library(tree)
+library(DT)
+```
+```{r, echo=FALSE}
+data = read.csv("winequality_all.csv")
+data_red = data %>% filter(red == 1)
+data_white = data %>% filter(red == 0)
+print(paste0("Dimension of red wine data set: ", dim(data_red)[1],", ", dim(data_red)[2]))
+print(paste0("Dimension of red wine data set: ", dim(data_white)[1], ", ", dim(data_white)[2]))
+```
+
+The dimension of red wine data set is (1599, 13), and the dimension of white wine data set is (4898, 13). The white wine data set is nearly three times that of the red wine data set -- the data set is imbalanced.
+
+## Distribution of Potential Predictors
+
+This part contains some exploratory data analysis on the wine quality data set, mainly for the purpose of classifying read wine and white wine. First we would like to explore the distribution of all the potential predictors separately for red wine and white wine, to see if there is any difference between predictor distribution in two groups.
+
+```{r, echo=FALSE}
+data %>% ggplot(aes(fixed.acidity, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Fixed Acidity") + 
+  xlab("Fixed Acidity") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+data %>% ggplot(aes(volatile.acidity, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Volatile Acidity") +
+  xlab("Volatile Acidity") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(citric.acid, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Citric Acid") +
+  xlab("Citric Acid") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(residual.sugar, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Residual Sugar") +
+  xlab("Residual Sugar") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(chlorides, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Chlorides") +
+  xlab("Chlorides") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(free.sulfur.dioxide, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Free Sulfur Dioxide") +
+  xlab("Free Sulfur Dioxide") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(total.sulfur.dioxide, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Total Sulfur Dioxide") +
+  xlab("Total Sulfur Dioxide") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(density, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Density") +
+  xlab("Density") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(pH, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("PH") +
+  xlab("PH") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(sulphates, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Sulphates") +
+  xlab("Sulphates") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+
+data %>% ggplot(aes(alcohol, fill = as.factor(red), y = ..density..)) + 
+  geom_histogram(alpha = 0.2, bins = 50, color = "black") +
+  ggtitle("Alcohol") +
+  xlab("Alcohol") +
+  scale_fill_discrete(name = "Category", labels = c("red", "white"))
+
+# quality
+t = table(data$quality, data$red)
+t[1:7] = t[1:7]/dim(data_white)[1]
+t[8:14] = t[8:14]/dim(data_red)[1]
+colnames(t) <- c("white", "red")
+print("Table of quality (in terms of proportion): ")
+print(t)
+```
+
+From these histograms, we can see that some of the features have similar distribution among two groups, while the other features have very different distributions. The predictors __residual sugar__, __pH__, __free sulfur dioxide__, __fixed acidity__, __alcohol__, __density__ and __quality__ have similar distribution, while predictors __volatile acidity__, __citric acid__, __chlorides__, and __total sulfur dioxide__ have very different distributions among two groups. Those having different distributions may have higher importance in predicting the wine category, and may have larger impact on the models we fit.
+
+

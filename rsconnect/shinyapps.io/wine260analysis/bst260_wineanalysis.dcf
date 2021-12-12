@@ -1,0 +1,11 @@
+name: bst260_wineanalysis
+title:
+username:
+account: wine260analysis
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5311310
+bundleId: 5361226
+url: https://wine260analysis.shinyapps.io/bst260_wineanalysis/
+when: 1639275931.01335
+lastSyncTime: 1639275931.01336

@@ -1,0 +1,46 @@
+---
+title: ""
+output: html_document
+---
+
+### I. Overview
+
+#### Motivation
+Vinho Verde is the biggest DOC of Portugal, and it produces wines distinguished by their high acidity and flavor. The local consumption and exports of Vinho Verde red and white wines from Portugal, one of the largest wine exporting country, have been increasing significantly in the recent decades. The price and sales of wines are largely dependent on their origin as well as their quality verified by wine certification. Thus, development and modification of new and existing wine quality assessment methods possess great commercial values. The sensory assessment by wine experts are widely used in the current market. However, more evidence and data-based method are needed to categorize the wide variety of wine products in the growing market. Therefore, we propose a quantitative way of analyzing and predicting wine quality assessment based on physicochemical properties of wines from a data science perspective.
+
+#### Project Goals
+1.	Find which of the physicochemical properties have statistically significant association with the wine quality
+2.  Summarize the different characteristics of the two variants of wine(red and white)
+2.	Differentiate between the two variants of the wine based on physicochemical properties using classification.
+3.	Predict quality of the wine based on physicochemical properties by linear regression and machine learning techniques.
+
+### II. Related Work
+Our group was interested in wine culture and wanted to explore more about the differences between different qualities of wine. Also we would like to differentiate between the two variants of the wine based their physicochemical properties.
+
+After checking some related web pages, we learned that the main components of wine are water, alcohol, glycerol and organic acids. Among them, acidity is a very important indicator. “Acidity is an essential trait in wine that’s necessary for quality. Great wines are in balance with their 4 fundamental traits (Acidity, tannin, alcohol, and sweetness) and as wines age, the acidity acts as a buffer to preserve the wine longer.” Therefore, acidity will be one of the key indicators for our analysis, and in our data set, acidity is also analyzed in three detailed categories. Another important component is the sugar in the wine. “Very sweet wines require elevated acidity to make them palatable, but the reverse can also be true. Sweetness is not an empirical quality wedded solely to the physical amount of sugar in a wine.” Therefore, sugar analysis and the use of sugar to predict the quality of wine will also be the focus of our research. In addition to the components mentioned above, alcohol, pH, density and other related factors can also have an impact on wine quality and will be the focus of our study.
+
+#### Website Links: 
+1. https://www.compoundchem.com/2014/05/28/redwinechemicals/
+2. https://winefolly.com/deep-dive/understanding-acidity-in-wine/
+3. https://daily.sevenfifty.com/understanding-the-role-of-sugar-in-wine/
+
+### III. Initial Questions
+
+#### Questions to Answer
+For this project, initially, we were trying to predict wine quality using all the covariates we had. First, we built a random forest model and selected the top 3 features by importance. We then fitted more models, including KNN, Naive Baye’s, LDA, QDA, decision tree and multinomial regression with those three covariates to boost our model accuracy. The random forest model turned out to achieve the highest accuracy (67%) in predicting wine quality. To inspect group-level performance, we provided accuracy for each model at each group. According to our results, we were good at predicting the quality for mid-quality wine since they have most samples, while not so well for low and high-quality wine.
+
+#### Course of Analysis
+In the course of our analysis, we conducted principal component analysis and applied it to multinomial logistic regression. We became curious about whether any subsets of wine share similar characteristics. The elbow method, the silhouette method, and the NbClust package all suggested two is the optimal number of clusters. K-means and PAM methods were then applied to our data to find out the exact clusters. 
+
+#### New Questions
+We were also interested in whether we could predict a wine is red or white using the data we had. Again, multiple models were applied and the random forest model achieved very high accuracy (99.4%) and the highest AUC (0.9954).
+
+
+### IV. GitHub Repository
+
+Here is the link to our repository: 
+https://github.com/yitinghan/BST260_WineAnalysis
+
+
+
+

@@ -1,0 +1,102 @@
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+
+The first step we do is to import the dataset and save it to a dataframe. Then we center and scale data set for PCA, and also we split the dataset into the training and test set. We also set a seed for future reproductivity.
+
+```{r, echo = FALSE}
+df <- read.csv("winequality_all.csv")
+df <- df[,-1]
+df <- df[,-c(12:14)]
+
+set.seed(1)
+```
+
+
+```{r, echo = FALSE}
+library(dplyr)
+library(jtools)
+wine.pca <- df %>%
+  apply(MARGIN = 2, FUN = center) %>%
+  apply(MARGIN = 2, FUN = scale)
+```
+
+
+
+```{r, echo = FALSE}
+n_test <- round(nrow(df) / 10) 
+test_indices <- sample(1:nrow(df), n_test, replace=FALSE)
+test <- df[test_indices,]
+train <- df[-test_indices,]
+```
+
+Now we will start our principle component analysis, for this section we focus on choosing number of principal components.
+
+
+
+
+We calculate the eigenvalue for the wine data set, make sure that the sum of the eigenvalues equals the total variance of the sample data. Then we calculate the proportion of the total variance for each particular eigenvalue.
+
+```{r, echo = FALSE}
+wine.pca.eigen <- eigen(cov(wine.pca))
+wine.pca.eigen$values
+```
+
+
+
+```{r, echo = FALSE}
+all.equal(sum(wine.pca.eigen$values), sum(apply(wine.pca, MARGIN = 2, FUN = var)))
+```
+
+
+
+```{r, echo = FALSE}
+wine.pca.ve <- wine.pca.eigen$values/sum(wine.pca.eigen$values)
+wine.pca.ve
+```
+
+# How many principal components are needed?
+
+We will introduce the following three simple approaches.
+
+1. the visual examination of a scree plot
+2. the variance explained criteria
+3. the Kaiser rule.
+
+The visual examination of a scree plot
+
+By observing the scree plot, and looking for a point at which the proportion of variance explained by each subsequent principal component drops off. This is often referred to as an elbow in the scree plot.
+
+```{r, echo = FALSE}
+par(mfrow = c(1,2), mar = c(4,5,3,1))
+plot(wine.pca.ve,
+     xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained", 
+     ylim = c(0,1), 
+     type = 'b',
+     main = 'Scree plot')
+
+plot(cumsum(wine.pca.ve), 
+     xlab = "Principal Component", 
+     ylab = "Cumulative Proportion of\nVariance Explained", 
+     ylim = c(0,1),
+     type = 'b',
+     main = 'Scree plot')
+```
+
+By looking at the plots we see a drop off (elbow in the scree plot) after the fourth principal component. Thus, based on the scree plot we would decide to pick the first five principal component to represent our data set, thereby explaining 80% of the variance in the data set.
+
+Another approach to choose the number of principal components is to set a threshold, say 90%, and stop when the first k components account for a percentage of total variation greater than this threshold. In our example the first eight components account for 93.7% of the variation. Thus, based on the variance explained criteria we pick the first eight principal components to represent our data set.
+
+```{r, echo = FALSE}
+cumsum(wine.pca.eigen$values/sum(wine.pca.eigen$values))
+```
+
+Kaiser’s rule (Kaiser-Guttman criterion)
+only those principal components whose variances exceed 1 are retained
+
+```{r, echo = FALSE}
+wine.pca.eigen$values[wine.pca.eigen$values >=1]
+```

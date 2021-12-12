@@ -1,0 +1,33 @@
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+data <- fulldf
+
+```
+
+
+```{r, echo = FALSE, message = FALSE}
+#  summary(fulldf$pH)
+fulldf %>% ggplot(aes(pH)) + 
+  geom_histogram( color = "blue",fill = "steelblue")
+```
+
+From the histogram and summary table, we see that the distribution of pH is approximately normal, with mean 3.219, median 3.210.
+
+```{r, echo = FALSE, message = FALSE}
+ggplot(data = fulldf, aes(x = quality_group, y = pH, color = quality_group)) +
+  geom_boxplot()
+```
+
+We don't see a significant difference in the distribution of pH value among different wine quality groups. 

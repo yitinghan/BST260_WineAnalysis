@@ -1,0 +1,121 @@
+
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+```
+
+We compare 3 types of acidity in red wine and white wine in general. Fixed acidity (near 7) is much larger than citric acidity and volatile acidity (near 0.4) whether in red wine or white wine. 
+
+
+```{R, echo = FALSE, message = FALSE, include=FALSE}
+data <- fulldf
+data %>% group_by(red) %>% summarize(mean(fixed.acidity),mean(citric.acid), mean(volatile.acidity))
+```
+
+
+
+## 1. Fixed Acidity
+```{R, echo = FALSE, message = FALSE}
+data %>% 
+  ggplot(aes(fixed.acidity)) +
+  geom_histogram(binwidth = 0.5,color = "blue",fill = "steelblue") 
+
+data %>% 
+  filter(fixed.acidity != 0) %>% 
+  ggplot(aes(log2(fixed.acidity))) +
+  geom_histogram(binwidth = 0.05, color = "blue",fill = "steelblue")
+```
+
+From the histogram, we see that the distribution of fixed acidity is right skewed. After applying log2 transformation, the distribution of fixed acidity is less skewed and looks more like a normal distribution.
+
+```{R, echo = FALSE, message = FALSE}
+ggplot(data = data, aes(x = quality_group, y = log2(fixed.acidity), color = quality_group)) +
+  geom_boxplot()
+```
+
+Since there are plenty of outliers, we transform into log2 form and can see that high and middle quality group have similar means and more outliers of fixed acidity. The low quality group has a little bit larger level of fixed acidity on average. 
+
+## 2. Citric Acidity
+```{R, echo = FALSE, message = FALSE}
+data %>% 
+  filter(citric.acid != 0) %>% 
+  ggplot(aes(volatile.acidity)) +
+  geom_histogram(binwidth = 0.05, color = "blue",fill = "steelblue") 
+
+data %>% 
+  filter(citric.acid != 0) %>% 
+  ggplot(aes(log2(volatile.acidity))) +
+  geom_histogram(binwidth = 0.5, color = "blue",fill = "steelblue") 
+```
+
+We see that the distribution of citric acidity is right skewed, not normally distributed. After dropping 0 and applying log2 transformation, the distribution of fixed acidity is less but still right skewed.
+
+```{R, echo = FALSE, message = FALSE}
+data %>% filter(citric.acid != 0) %>% 
+  ggplot(aes(x = quality_group, y = log2(citric.acid), color = quality_group)) +
+  geom_boxplot()
+
+```
+
+Since there are plenty of outliers, we transform into log2 form and can see that high and middle quality group have similar means and more outliers of citric acidity. The low quality group has a little bit smaller level of citric acidity with larger variance, on average. 
+
+## 3. Volatile Acidity
+
+```{R, echo = FALSE, message = FALSE}
+data %>% 
+  filter(volatile.acidity != 0) %>% 
+  ggplot(aes(volatile.acidity)) +
+  geom_histogram(binwidth = 0.05, color = "blue",fill = "steelblue") 
+
+data %>% 
+  filter(volatile.acidity != 0) %>% 
+  ggplot(aes(log2(volatile.acidity))) +
+  geom_histogram(binwidth = 0.5, color = "blue",fill = "steelblue") 
+```
+
+We see that the distribution of volatile acidity is right skewed, not normally distributed. After dropping 0 and applying log2 transformation, the distribution of volatile acidity is less right skewed and looks more like a normal distribution.
+
+```{R, echo = FALSE, message = FALSE}
+data %>% filter(citric.acid != 0) %>% 
+  ggplot(aes(x = quality_group, y = log2(volatile.acidity), color = quality_group)) +
+  geom_boxplot()
+```
+
+Since there are plenty of outliers, we transform into log2 form and can see that high and middle quality group have similar means (at lower level of citric acidity) and more outliers of citric acidity. The low quality group has a larger level of citric acidity with larger variance, on average. 
+
+ 
+## 4. Quality - Acidity
+ 
+```{R, echo = FALSE, message = FALSE}
+data %>% ggplot(aes(volatile.acidity, citric.acid)) +   
+  geom_point(aes(col=quality_group), size = 1) +
+  xlab("volatile.acidity") + 
+  ylab("citric.acid") +
+  ggtitle("Different quality wine with different levels of acidities") 
+```
+
+From above we can see that most of the high quality wine is below volatile acidity 0.4 and citric acid between 0.25 to 0.5. Middle and low quality wine are above volatile acidity 0.4 or citric acidity 0.5.
+
+## 5. Wine Type - Acidity
+
+```{R, echo = FALSE, message = FALSE}
+data %>% ggplot(aes(volatile.acidity, citric.acid)) +   
+  geom_point(aes(col=red), size = 1) +
+  xlab("volatile.acidity") + 
+  ylab("citric.acid") +
+  ggtitle("Different types of wine with different levels of acidities") 
+```
+
+As for the difference between red wine and white wine, the volatile acidity of red wine is larger with range (0.3, 0.8). White wine tend to gather at low volatile acidity region. Also, red wine tend to have lower citric acidity, especially in the 0 citric acidity region.
+

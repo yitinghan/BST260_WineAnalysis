@@ -1,0 +1,58 @@
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r, echo = FALSE}
+df <- read.csv("winequality_all.csv")
+df <- df[,-1]
+df <- df[,-ncol(df)]
+set.seed(1)
+n_test <- round(nrow(df) / 10) 
+test_indices <- sample(1:nrow(df), n_test, replace=FALSE)
+test <- df[test_indices,]
+train <- df[-test_indices,]
+pc <- prcomp(train[,-12], center = TRUE, scale = TRUE)
+trg <- predict(pc, train)
+trg <- data.frame(trg, train[12])
+tst <- predict(pc, test)
+tst <- data.frame(tst, test[12])
+```
+
+Multinomial Logistic Regression with First Two PCs Based on Kaiser’s rule
+
+```{r, echo = FALSE}
+library(nnet)
+mymodel <- multinom(quality~PC1+PC2+PC3, data = trg)
+summary(mymodel)
+```
+
+Confusion Matrix & Misclassification Error – training
+
+```{r, echo = FALSE}
+p <- predict(mymodel, trg)
+tab <- table(p, trg$quality)
+tab
+1 - sum(diag(tab))/sum(tab)
+```
+
+Misclassification error for the training data set is `r 1 - sum(diag(tab))/sum(tab)`
+
+Confusion Matrix & Misclassification Error – testing
+
+```{r, echo = FALSE}
+p1 <- predict(mymodel, tst)
+tab1 <- table(p1, tst$quality)
+tab1
+1 - sum(diag(tab1))/sum(tab1)
+```
+
+Misclassification error for the testing data set is `r 1 - sum(diag(tab1))/sum(tab1)`
+
+Interpretation of misclassification error 
+
+```{r}
+summary(as.factor(train$quality))
+```
+
+One of the potential interpretation for why there is no prediction for quality 3, 4, 8, 9 is that the number of data for these quality levels is comparatively low so that the prediction of the model on these levels does not perform as well as quality 5, 6 which have more data to train.

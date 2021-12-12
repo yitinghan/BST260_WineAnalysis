@@ -1,0 +1,39 @@
+
+
+```{r ,echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+merged <- read_csv("winequality_all.csv")
+merged$red <- as.factor(merged$red )
+fulldf <- merged %>% mutate(quality_group = cut(quality, breaks = c(0,4,6,10),labels=c("lo", "mid", "hi"))) 
+
+```
+
+
+```{r, echo = FALSE, message = FALSE}
+data <- fulldf
+data %>% 
+  ggplot(aes(residual.sugar)) +
+  geom_histogram(binwidth = 2, color = "blue",fill = "steelblue") 
+
+data %>% 
+  ggplot(aes(log2(residual.sugar))) +
+  geom_histogram(binwidth = 0.2, color = "blue",fill = "steelblue") 
+```
+
+We see that the distribution of residual sugar is right skewed for white wine group, not normally distributed. After applying log2 transformation, the distribution of residual sugar is still not normally distributed.
+
+```{R, echo = FALSE, message = FALSE}
+ggplot(data = data, aes(x = quality_group, y = log2(residual.sugar), color = quality_group)) +
+  geom_boxplot()
+```
+
+Since there are plenty of outliers, we transform into log2 form and can see that high and middle quality group have similar means of sugar. The low quality group has a smaller level of sugar, on average. All the quality groups have similar variance of sugar.
+
