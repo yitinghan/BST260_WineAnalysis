@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 
 
-data <- read.csv("fullwine.csv")
+data <- read.csv("winequality_all.csv")
 dat <- read.csv("group_level_accuracy.csv")
 dat$model[which(dat$model == "RF")] <- "Random Forest"
 
@@ -38,10 +38,10 @@ ui <- dashboardPage(
                     menuItem("Principal Component Analysis", tabName = "pca_html"
                     ),
                     
-                    menuItem("Quality Prediciton", tabName = "quality_html"
+                    menuItem("Quality Prediction", tabName = "quality_html"
                     ),
                     
-                    menuItem("Wine Type Prediciton", tabName = "wine_type_html"
+                    menuItem("Wine Type Prediction", tabName = "wine_type_html"
                     )
                     
                     

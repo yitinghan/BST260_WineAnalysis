@@ -5,7 +5,7 @@ account: wine260analysis
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5311310
-bundleId: 5361226
+bundleId: 5363558
 url: https://wine260analysis.shinyapps.io/bst260_wineanalysis/
-when: 1639275931.01335
-lastSyncTime: 1639275931.01336
+when: 1639342135.14582
+lastSyncTime: 1639342135.14584

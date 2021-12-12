@@ -22,7 +22,7 @@ require(ggradar)
 
 ```{r}
 
-data = read.csv("fullwine.csv")
+data = read.csv("winequality_all.csv")
 data = data[, 1:(ncol(data) - 3)] # Remove last two columns
 data = data[, -1]
 data = scale(data)# scaled the data
@@ -46,7 +46,7 @@ We extract the clusters results and add them back to our initial data to do some
 ```{r}
 library(dplyr)
 library(knitr)
-data_ori <- read.csv("fullwine.csv")
+data_ori <- read.csv("winequality_all.csv")
 data_ori <- data_ori[,-1]
 data_ori <- data_ori[, -ncol(data_ori)]
 cluster_data <- data_ori %>% 

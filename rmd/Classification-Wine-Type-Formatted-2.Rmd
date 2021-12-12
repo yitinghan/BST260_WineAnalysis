@@ -142,11 +142,11 @@ ggroc(list("Logistic Regression" = roc_glm, "LDA" = roc_lda, "Decision Tree" = r
   xlab("Sensitivity") +
   ylab("Specificity")
 ```
-```{r, warning=FALSE, echo=FALSE}
+```{r, warning=FALSE, echo = FALSE}
 print(paste0("For logistic regression model, the AUC is ", auc(roc_glm)))
 print(paste0("For LDA model, the AUC is ", auc(roc_lda)))
-print(paste0("For Decision Tree model, the AUC is ", auc(roc_tree)))
-print(paste0("For Random Forest model, the AUC is ", auc(roc_rf)))
+print(paste0("For tree model, the AUC is ", auc(roc_tree)))
+print(paste0("For random forest model, the AUC is ", auc(roc_rf)))
 ```
 
 The ROC curves and AUC all indicate that these models perform very good in predicting whether a wine is red or not. The model that has the highest AUC is the random forest model.

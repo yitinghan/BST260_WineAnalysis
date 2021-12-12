@@ -24,7 +24,7 @@ First, we use the Hopkins statistic (Lawson and Jurs 1990) denoted as H to asses
 
 ```{r}
 
-data = read.csv("fullwine.csv")
+data = read.csv("winequality_all.csv")
 data = data[, -1]
 data = data[, 1:(ncol(data) - 3)] # Remove last two columns
 data = scale(data)# scaled the data

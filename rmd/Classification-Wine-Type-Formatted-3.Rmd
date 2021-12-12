@@ -57,6 +57,7 @@ data %>% ggplot(aes(chlorides, total.sulfur.dioxide, color = red)) +
 
 From the above scatter plot we can see that the boundary of red wine and white wine is quite clear even with only two predictors. White wine generally has higher level of __chlorides__ and higher level of __total sulfur dioxide__. Therefore, next we will try using only two predictors to predict whether the wine is red or not.
 
+### logistic regression
 ```{r, echo=FALSE}
 # logistic regression
 set.seed(1)
@@ -68,6 +69,7 @@ confusionMatrix(as.factor(preds_glm), reference =as.factor(test_set$red))
 
 The logistic regression model using only two predictors has lower accuracy (0.9513) than the logistic regression model using all the predictors. Besides, its specificity is comparatively low, which means this model performs not that well in predicting white wine.
 
+### LDA
 ```{r, echo=FALSE}
 # LDA 
 set.seed(1)
@@ -79,6 +81,7 @@ confusionMatrix(as.factor(lda_preds), reference =as.factor(test_set$red), positi
 
 The LDA model has overall accuracy around 0.95 as well. It has lower sensitivity and higher specificity, which means this model performs better in predicting white wine than predicting red wine. 
 
+### QDA
 ```{r, echo=FALSE}
 # QDA
 set.seed(1)
@@ -90,6 +93,7 @@ confusionMatrix(as.factor(qda_preds), reference = as.factor(test_set$red), posit
 
 With only two predictors, fitting QDA model becomes possible. This model has slightly lower overall accuracy than logistic regression and LDA model. Here the sensitivity is comparatively low and specificity is comparatively high, which shows that this model performs better in predicting white wine than predicting red wine.
 
+### Tree Model
 ```{r, echo=FALSE}
 # Tree
 fit_tree =rpart(as.factor(red) ~ chlorides + total.sulfur.dioxide, data=train_set)  
@@ -100,6 +104,7 @@ confusionMatrix(as.factor(tree_preds), reference = as.factor(test_set$red), posi
 
 The tree model has slightly higher accuracy than the previous models, and the sensitivity and specificity is more balanced, although the sensitivity is still lower than the specificity.
 
+### Random Forest
 ```{r, echo=FALSE}
 # Random Forest
 fit_rf <- randomForest(as.factor(red) ~ chlorides + total.sulfur.dioxide, data=train_set)
@@ -123,12 +128,12 @@ ggroc(list("Logistic Regression" = roc_glm, "LDA" = roc_lda, "QDA" = roc_qda, "D
   xlab("Sensitivity") +
   ylab("Specificity")
 ```
-```{r,echo=FALSE}
+```{r, echo = FALSE, message=FALSE}
 print(paste0("For logistic regression model, the AUC is ", auc(roc_glm)))
 print(paste0("For LDA model, the AUC is ", auc(roc_lda)))
 print(paste0("For QDA model, the AUC is ", auc(roc_qda)))
-print(paste0("For Decision Tree model, the AUC is ", auc(roc_tree)))
-print(paste0("For Random Forest model, the AUC is ", auc(roc_rf)))
+print(paste0("For tree model, the AUC is ", auc(roc_tree)))
+print(paste0("For random forest model, the AUC is ", auc(roc_rf)))
 ```
 
 Either using all the potential predictors or using only two most important predictors, the random forest model has the highest the AUC value. Since AUC represents the balance between sensitivity and specificity, I would choose random forest as the best model. In terms of number of predictors, the AUC of the model using only two predictors (0.9954) is not significantly smaller than the one using all the predictors (0.9997). Therefore, if collecting the value of other potential predictors is expensive, employing only two predictors __chlorides__ and __total sulfur dioxide__ is also a good choice.

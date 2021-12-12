@@ -39,8 +39,11 @@ We were also interested in whether we could predict a wine is red or white using
 ### IV. GitHub Repository
 
 Here is the link to our repository: 
+
 https://github.com/yitinghan/BST260_WineAnalysis
 
+Here is the link to video: 
 
+https://www.youtube.com/watch?v=VFkuJBicJNI
 
 
