@@ -1,5 +1,6 @@
 ## Shiny App for BST 260 Project
 
+```
 BST260_WineAnalysis/
 ├── data
 │   └── winequality_all.csv : dataset(red and white combined) downloaded from [`UCI Machine Learning Repository`](https://archive.ics.uci.edu/ml/datasets/Wine+Quality)
@@ -10,8 +11,10 @@ BST260_WineAnalysis/
 └── app.R : Shiny App
 └── README.md
 └── ...
+```
 
 Video Link: [`BST260 Final Project Video`](https://youtu.be/VFkuJBicJNI)
+
 Website Link : [`Wine Analysis`](https://wine260analysis.shinyapps.io/bst260_wineanalysis/)
 
 ### Team members:
